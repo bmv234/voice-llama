@@ -1,0 +1,130 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e0e0e0;
+}
+
+.container {
+    width: 90%;
+    max-width: 800px;
+    height: 80vh;
+    background: #2d2d2d;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Custom scrollbar for dark theme */
+.chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+    border-radius: 4px;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: #4a4fff;
+    color: #ffffff;
+    margin-left: auto;
+}
+
+.bot-message {
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+    margin-right: auto;
+}
+
+.input-container {
+    display: flex;
+    padding: 20px;
+    gap: 10px;
+    border-top: 1px solid #404040;
+}
+
+#textInput {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #404040;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+}
+
+#textInput::placeholder {
+    color: #808080;
+}
+
+#textInput:focus {
+    outline: none;
+    border-color: #4a4fff;
+    box-shadow: 0 0 5px rgba(74, 79, 255, 0.3);
+}
+
+.mic-button, .send-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mic-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.mic-button.active {
+    background-color: #28a745;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.send-button {
+    background-color: #4a4fff;
+    color: white;
+}
+
+.mic-button:hover, .send-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.mic-button:active, .send-button:active {
+    transform: translateY(1px);
+}
+
+.mic-icon {
+    font-size: 20px;
+}

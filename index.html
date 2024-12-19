@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Disable CORS -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+    <title>Voice Llama</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container" id="chatContainer">
+            <!-- Chat messages will be inserted here -->
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="textInput" placeholder="Type your message...">
+            <button id="micButton" class="mic-button">
+                <span class="mic-icon">🎤</span>
+            </button>
+            <button id="sendButton" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <!-- Load dependencies -->
+    <script src="lib/ort.min.js"></script>
+    <script src="lib/bundle.min.js"></script>
+    <!-- Load our app -->
+    <script src="app.js"></script>
+</body>
+</html>
