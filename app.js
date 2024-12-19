@@ -297,9 +297,17 @@ class VoiceLlama {
             if (!response.ok) throw new Error('TTS API request failed');
 
             const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            await audio.play();
+            // Convert blob to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+                const base64data = reader.result;
+                const audio = new Audio();
+                audio.src = base64data;
+                audio.play().catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+            };
         } catch (error) {
             console.error('Error in TTS:', error);
             // Silently fail TTS - don't show error message to user since they can still read the response
