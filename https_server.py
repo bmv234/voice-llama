@@ -15,11 +15,11 @@ mimetypes.add_type('application/javascript', '.mjs')
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         if self.path == '/0.0.0.0/tts':
-            self.proxy_request('https://0.0.0.0:8050/tts')
+            self.proxy_request('https://host.docker.internal:8050/tts')
         elif self.path == '/0.0.0.0/stt':
-            self.proxy_request('https://0.0.0.0:8060/transcribe')
+            self.proxy_request('https://host.docker.internal:8060/transcribe')
         elif self.path == '/0.0.0.0/ollama':
-            self.proxy_request('http://0.0.0.0:11434/api/chat')
+            self.proxy_request('http://host.docker.internal:11434/api/chat')
         else:
             super().do_POST()
 

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    image: ghcr.io/owner/voice-llama:latest
+    ports:
+      - "8443:8443"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  ollama_data:
