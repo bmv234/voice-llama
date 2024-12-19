@@ -4,8 +4,11 @@ class VoiceLlama {
         this.textInput = document.getElementById('textInput');
         this.micButton = document.getElementById('micButton');
         this.sendButton = document.getElementById('sendButton');
+        this.vadIndicator = document.querySelector('.vad-indicator');
+        this.vadText = document.querySelector('.vad-text');
         this.vad = null;
         this.isListening = false;
+        this.isSpeaking = false;
         this.mediaRecorder = null;
         this.audioChunks = [];
         this.sttAvailable = false;
@@ -13,8 +16,12 @@ class VoiceLlama {
         this.chatHistory = [];
         this.currentMessageDiv = null;
 
+        // Set initial VAD status
+        this.vadText.textContent = 'Off';
+        this.vadIndicator.style.backgroundColor = '#dc3545';
+
         // Initialize with a welcome message
-        this.addMessage('Welcome to Voice Llama! Checking service availability...', 'bot');
+        this.addMessage('Welcome to Voice Llama! Checking service availability...', 'bot', true);
         
         // Check services and initialize
         this.initializeServices();
@@ -38,7 +45,7 @@ class VoiceLlama {
             ? `Available services: ${status.join(', ')}`
             : 'Running in text-only mode';
             
-        this.addMessage(availableServices, 'bot');
+        this.addMessage(availableServices, 'bot', true);
     }
 
     async checkSTTService() {
@@ -84,28 +91,51 @@ class VoiceLlama {
                 onSpeechStart: () => {
                     console.log('Speech started');
                     this.startRecording();
-                    this.micButton.style.backgroundColor = '#28a745';
+                    this.isSpeaking = true;
+                    this.updateVADStatus();
                 },
                 onSpeechEnd: () => {
                     console.log('Speech ended');
                     this.stopRecording();
-                    this.micButton.style.backgroundColor = this.isListening ? '#dc3545' : '#dc3545';
+                    this.isSpeaking = false;
+                    this.updateVADStatus();
                 },
                 onVADMisfire: () => {
                     console.log('VAD misfire');
                     this.stopRecording();
-                    this.micButton.style.backgroundColor = this.isListening ? '#dc3545' : '#dc3545';
+                    this.isSpeaking = false;
+                    this.updateVADStatus();
                 },
                 modelFrameLength: 1024,
                 modelSampleRate: 16000
             });
             console.log('VAD initialized successfully');
-            this.addMessage('Voice detection initialized. Click the microphone to start speaking.', 'bot');
+            this.addMessage('Voice detection initialized. Click the microphone to start speaking.', 'bot', true);
+            this.micButton.disabled = false;
         } catch (error) {
             console.error('Error initializing VAD:', error);
-            this.addMessage('Voice detection initialization failed. Please use text input.', 'bot');
+            this.addMessage('Voice detection initialization failed. Please use text input.', 'bot', true);
             this.micButton.disabled = true;
             this.micButton.style.opacity = '0.5';
+        }
+    }
+
+    updateVADStatus() {
+        const vadText = document.querySelector('.vad-text');
+        const vadIndicator = document.querySelector('.vad-indicator');
+        
+        if (!this.isListening) {
+            vadText.textContent = 'Off';
+            vadIndicator.classList.remove('active');
+            vadIndicator.style.backgroundColor = '#dc3545';  // Red
+        } else if (this.isSpeaking) {
+            vadText.textContent = 'Speaking';
+            vadIndicator.classList.add('active');
+            vadIndicator.style.backgroundColor = '#28a745';  // Green
+        } else {
+            vadText.textContent = 'Listening';
+            vadIndicator.classList.remove('active');
+            vadIndicator.style.backgroundColor = '#ffc107';  // Yellow
         }
     }
 
@@ -125,22 +155,22 @@ class VoiceLlama {
 
         try {
             if (this.isListening) {
-                await this.vad.stop();
+                await this.vad.pause();  // Use pause instead of stop
                 this.micButton.classList.remove('active');
-                this.micButton.style.backgroundColor = '#dc3545';
+                this.addMessage('Voice input disabled.', 'bot', true);
             } else {
                 await this.vad.start();
                 this.micButton.classList.add('active');
-                this.micButton.style.backgroundColor = '#dc3545';
-                this.addMessage('Listening... Speak now.', 'bot');
+                this.addMessage('Voice input enabled. Speak when ready.', 'bot', true);
             }
             this.isListening = !this.isListening;
+            this.updateVADStatus();  // Update VAD status after state change
         } catch (error) {
             console.error('Error toggling voice input:', error);
             this.addMessage('Error with voice input. Please try again.', 'bot');
             this.isListening = false;
             this.micButton.classList.remove('active');
-            this.micButton.style.backgroundColor = '#dc3545';
+            this.updateVADStatus();  // Update VAD status after error
         }
     }
 
@@ -165,7 +195,7 @@ class VoiceLlama {
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
-                this.addMessage('Error accessing microphone. Please check permissions.', 'bot');
+                this.addMessage('Error accessing microphone. Please check permissions.', 'bot', true);
             });
     }
 
@@ -201,7 +231,7 @@ class VoiceLlama {
             }
         } catch (error) {
             console.error('Error in STT:', error);
-            this.addMessage('Error converting speech to text. Please try again or use text input.', 'bot');
+            this.addMessage('Error converting speech to text. Please try again or use text input.', 'bot', true);
         }
     }
 
@@ -269,13 +299,13 @@ class VoiceLlama {
             if (fullResponse) {
                 this.chatHistory.push({ role: 'assistant', content: fullResponse });
                 if (this.ttsAvailable) {
-                    this.speakResponse(fullResponse);
+                    await this.speakResponse(fullResponse);
                 }
             }
 
         } catch (error) {
             console.error('Error in Ollama API:', error);
-            this.addMessage('Error: Make sure Ollama is running locally (http://localhost:11434) with llama3.2 model', 'bot');
+            this.addMessage('Error: Make sure Ollama is running locally (http://localhost:11434) with llama3.2 model', 'bot', true);
         } finally {
             this.sendButton.disabled = false;
             this.currentMessageDiv = null;
@@ -286,6 +316,23 @@ class VoiceLlama {
         if (!this.ttsAvailable) return;
 
         try {
+            // Store current VAD state
+            const wasListening = this.isListening;
+            
+            // Only try to pause VAD if it's initialized and we're listening
+            if (wasListening && this.vad) {
+                try {
+                    await this.vad.pause();  // Use pause instead of stop
+                    this.isListening = false;
+                    this.isSpeaking = false;
+                    this.micButton.classList.remove('active');
+                    this.updateVADStatus();  // Update VAD status when pausing
+                    this.addMessage('Voice input paused while playing response...', 'bot', true);
+                } catch (e) {
+                    console.error('Error pausing VAD:', e);
+                }
+            }
+
             const response = await fetch('/proxy/tts', {
                 method: 'POST',
                 headers: {
@@ -297,31 +344,61 @@ class VoiceLlama {
             if (!response.ok) throw new Error('TTS API request failed');
 
             const audioBlob = await response.blob();
-            // Convert blob to base64
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = () => {
-                const base64data = reader.result;
+            
+            // Wait for audio to load and play
+            await new Promise((resolve, reject) => {
                 const audio = new Audio();
-                audio.src = base64data;
-                audio.play().catch(error => {
-                    console.error('Error playing audio:', error);
-                });
-            };
+                audio.src = URL.createObjectURL(audioBlob);
+                
+                audio.oncanplaythrough = async () => {
+                    try {
+                        await audio.play();
+                        // Wait for audio to finish playing
+                        await new Promise(resolve => {
+                            audio.onended = resolve;
+                        });
+                        resolve();
+                    } catch (e) {
+                        console.error('Error playing audio:', e);
+                        reject(e);
+                    }
+                };
+                
+                audio.onerror = () => {
+                    reject(new Error('Error loading audio'));
+                };
+            });
+
+            // Only try to resume VAD if it was listening before and is initialized
+            if (wasListening && this.vad) {
+                try {
+                    await this.vad.start();  // Use start to resume
+                    this.isListening = true;
+                    this.micButton.classList.add('active');
+                    this.updateVADStatus();  // Update VAD status when resuming
+                    this.addMessage('Voice input resumed. Ready for your voice.', 'bot', true);
+                } catch (e) {
+                    console.error('Error resuming VAD:', e);
+                    this.isListening = false;
+                    this.updateVADStatus();  // Update VAD status on error
+                }
+            }
         } catch (error) {
             console.error('Error in TTS:', error);
             // Silently fail TTS - don't show error message to user since they can still read the response
         }
     }
 
-    addMessage(text, sender) {
-        if (sender === 'bot' && this.currentMessageDiv) {
-            this.currentMessageDiv.textContent = text;
-        } else {
+    addMessage(text, sender, isStatus = false) {
+        // If it's a status message or not currently streaming a response
+        if (isStatus || !this.currentMessageDiv) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
+            messageDiv.className = `message ${sender}-message${isStatus ? ' status-message' : ''}`;
             messageDiv.textContent = text;
             this.chatContainer.appendChild(messageDiv);
+        } else {
+            // Update current streaming message
+            this.currentMessageDiv.textContent = text;
         }
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }

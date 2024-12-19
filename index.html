@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Update CSP to allow data URLs for media -->
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; media-src * data:;">
+    <!-- Update CSP to allow blob URLs and media sources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; media-src * data: blob:;">
     <title>Voice Llama</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -15,9 +15,13 @@
         </div>
         
         <div class="input-container">
-            <input type="text" id="textInput" placeholder="Type your message...">
-            <button id="micButton" class="mic-button">
-                <span class="mic-icon">🎤</span>
+            <input type="text" id="textInput" placeholder="Type your message or use voice input...">
+            <div class="vad-status" id="vadStatus" title="Voice Activity Detection Status">
+                <span class="vad-indicator"></span>
+                <span class="vad-text">Off</span>
+            </div>
+            <button id="micButton" class="mic-button" title="Click to enable/disable voice input">
+                <span class="mic-icon">🎙️</span>
             </button>
             <button id="sendButton" class="send-button">Send</button>
         </div>
