@@ -50,7 +50,7 @@ class VoiceLlama {
 
     async checkSTTService() {
         try {
-            const response = await fetch('/proxy/stt', {
+            const response = await fetch('/0.0.0.0/stt', {
                 method: 'OPTIONS'
             });
             this.sttAvailable = response.ok;
@@ -63,7 +63,7 @@ class VoiceLlama {
 
     async checkTTSService() {
         try {
-            const response = await fetch('/proxy/tts', {
+            const response = await fetch('/0.0.0.0/tts', {
                 method: 'OPTIONS'
             });
             this.ttsAvailable = response.ok;
@@ -222,7 +222,7 @@ class VoiceLlama {
             const formData = new FormData();
             formData.append('audio', audioBlob, 'audio.wav');
 
-            const response = await fetch('/proxy/stt', {
+            const response = await fetch('/0.0.0.0/stt', {
                 method: 'POST',
                 body: formData
             });
@@ -252,7 +252,7 @@ class VoiceLlama {
         this.sendButton.disabled = true;
 
         try {
-            const response = await fetch('http://localhost:11434/api/chat', {
+            const response = await fetch('/0.0.0.0/ollama', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -311,7 +311,7 @@ class VoiceLlama {
 
         } catch (error) {
             console.error('Error in Ollama API:', error);
-            this.addMessage('Error: Make sure Ollama is running locally (http://localhost:11434) with llama3.2 model', 'bot', true);
+            this.addMessage('Error: Make sure Ollama is running locally with llama3.2 model', 'bot', true);
         } finally {
             this.sendButton.disabled = false;
             this.currentMessageDiv = null;
@@ -339,7 +339,7 @@ class VoiceLlama {
                 }
             }
 
-            const response = await fetch('/proxy/tts', {
+            const response = await fetch('/0.0.0.0/tts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

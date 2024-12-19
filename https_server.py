@@ -4,7 +4,7 @@ import mimetypes
 import urllib.request
 import urllib.error
 import json
-from http.client import HTTPSConnection
+from http.client import HTTPConnection, HTTPSConnection
 from urllib.parse import urlparse
 import ssl
 
@@ -14,10 +14,12 @@ mimetypes.add_type('application/javascript', '.mjs')
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
-        if self.path == '/proxy/tts':
-            self.proxy_request('https://localhost:8050/tts')
-        elif self.path == '/proxy/stt':
-            self.proxy_request('https://localhost:8060/transcribe')
+        if self.path == '/0.0.0.0/tts':
+            self.proxy_request('https://0.0.0.0:8050/tts')
+        elif self.path == '/0.0.0.0/stt':
+            self.proxy_request('https://0.0.0.0:8060/transcribe')
+        elif self.path == '/0.0.0.0/ollama':
+            self.proxy_request('http://0.0.0.0:11434/api/chat')
         else:
             super().do_POST()
 
@@ -32,7 +34,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
         parsed_url = urlparse(target_url)
         try:
-            conn = HTTPSConnection(parsed_url.netloc, context=context)
+            if parsed_url.scheme == 'https':
+                conn = HTTPSConnection(parsed_url.netloc, context=context)
+            else:
+                # For HTTP targets, use regular HTTPConnection
+                conn = HTTPConnection(parsed_url.netloc)
             headers = {
                 'Content-Type': self.headers.get('Content-Type', 'application/json'),
                 'Content-Length': str(len(body) if body else 0)
@@ -62,7 +68,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-server_address = ('localhost', 8443)
+server_address = ('0.0.0.0', 8443)
 httpd = http.server.HTTPServer(server_address, ProxyHandler)
 
 # Create SSL context
@@ -70,7 +76,7 @@ ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 ssl_context.load_cert_chain(certfile='cert.pem', keyfile='key.pem')
 httpd.socket = ssl_context.wrap_socket(httpd.socket, server_side=True)
 
-print(f'Serving HTTPS on {server_address[0]} port {server_address[1]} (https://localhost:8443/) ...')
-print('Proxying STT requests to https://localhost:8060/transcribe')
-print('Proxying TTS requests to https://localhost:8050/tts')
+print(f'Serving HTTPS on {server_address[0]} port {server_address[1]} (https://0.0.0.0:8443/) ...')
+print('Proxying STT requests to https://0.0.0.0:8060/transcribe')
+print('Proxying TTS requests to https://0.0.0.0:8050/tts')
 httpd.serve_forever()
