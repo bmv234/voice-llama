@@ -34,7 +34,7 @@ class VoiceLlama {
         ]);
 
         this.initializeEventListeners();
-        this.initializeVAD();
+        await this.initializeVAD();
 
         // Update status after all checks
         const status = [];
@@ -83,11 +83,18 @@ class VoiceLlama {
         }
 
         try {
+            // Initialize ONNX Runtime with proper configuration
+            if (!window.ort) {
+                console.error('ONNX Runtime not loaded');
+                throw new Error('ONNX Runtime not loaded');
+            }
+
+            // Create VAD instance with default model
             this.vad = await window.vad.MicVAD.new({
-                modelUrl: 'lib/silero_vad_legacy.onnx',
-                workletUrl: 'lib/vad.worklet.bundle.min.js',
-                threshold: 0.9,
-                minSpeechFrames: 10,
+                positiveSpeechThreshold: 0.9,
+                negativeSpeechThreshold: 0.75,
+                preSpeechPadFrames: 10,
+                redemptionFrames: 10,
                 onSpeechStart: () => {
                     console.log('Speech started');
                     this.startRecording();
@@ -105,10 +112,9 @@ class VoiceLlama {
                     this.stopRecording();
                     this.isSpeaking = false;
                     this.updateVADStatus();
-                },
-                modelFrameLength: 1024,
-                modelSampleRate: 16000
+                }
             });
+
             console.log('VAD initialized successfully');
             this.addMessage('Voice detection initialized. Click the microphone to start speaking.', 'bot', true);
             this.micButton.disabled = false;

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Update CSP to allow blob URLs and media sources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; media-src * data: blob:;">
+    <!-- Update CSP to allow WASM, blob URLs and media sources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; media-src * data: blob:; worker-src * blob:;">
     <title>Voice Llama</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -27,9 +27,22 @@
         </div>
     </div>
 
-    <!-- Load dependencies -->
-    <script src="lib/ort.min.js"></script>
-    <script src="lib/bundle.min.js"></script>
+    <!-- Configure ONNX Runtime -->
+    <script>
+        // Set ONNX Runtime configuration before loading
+        window.ortConfig = {
+            webgl: {
+                enabled: false
+            },
+            wasm: {
+                wasmPaths: 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/'
+            }
+        };
+    </script>
+
+    <!-- Load dependencies from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
     <!-- Load our app -->
     <script src="app.js"></script>
 </body>
