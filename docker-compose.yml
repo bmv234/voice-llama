@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: ghcr.io/owner/voice-llama:latest
+    image: ghcr.io/bmv234/voice-llama:latest
     ports:
       - "8443:8443"
     volumes:
