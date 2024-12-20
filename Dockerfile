@@ -15,7 +15,7 @@ RUN if [ ! -f cert.pem ] || [ ! -f key.pem ]; then \
     apt-get update && \
     apt-get install -y openssl && \
     openssl req -x509 -newkey rsa:4096 -nodes \
-    -out cert.pem -keyout key.pem -days 365 \
+    -out /app/cert.pem -keyout /app/key.pem -days 365 \
     -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" && \
     apt-get remove -y openssl && \
     apt-get autoremove -y && \
